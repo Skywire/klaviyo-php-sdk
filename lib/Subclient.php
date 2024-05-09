@@ -3,8 +3,33 @@ namespace Klaviyo;
 
 class Subclient {
 
+    /**
+     * @var mixed
+     */
+    protected $api_instance;
+    /**
+     * @var int|mixed
+     */
+    protected $wait_seconds;
+    /**
+     * @var int|mixed
+     */
+    protected $num_retries;
+    /**
+     * @var array|int[]|mixed
+     */
+    protected $retry_codes;
+    /**
+     * @var array|string[]
+     */
+    protected $json_string_function_names;
+    /**
+     * @var array|string[]
+     */
+    protected $base64_function_names;
+
     public function __construct(
-        $api_instance, 
+        $api_instance,
         $wait_seconds = 3,
         $num_retries = 3,
         $retry_codes = [429,503,504]
@@ -36,7 +61,7 @@ class Subclient {
 
                 if (json_last_error() == JSON_ERROR_NONE) {
                     $args[0] = base64_encode($args[0]);
-                } 
+                }
             } else {
                 $args[0] = base64_encode(json_encode($args[0]));
             }
@@ -44,14 +69,14 @@ class Subclient {
 
 
         $attempts = 0;
-        
+
         do {
 
             try {
                 $result = $this->api_instance->$name(...$args);
                 return $result;
             } catch (Exception $e) {
-                
+
                 if ( ! in_array($e->getCode(),$this->retry_codes)) {
                     throw $e;
                 }
@@ -60,12 +85,12 @@ class Subclient {
                     $attempts++;
                     sleep($this->wait_seconds);
                     continue;
-    
+
                 }
             }
-        
+
             break;
-        
+
         } while($attempts < ($this->num_retries));
 
         throw $e;
